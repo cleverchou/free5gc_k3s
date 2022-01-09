@@ -1,0 +1,49 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: free5gc-nssf-deployment
+spec:
+  selector:
+    matchLabels:
+      app: free5gc-nssf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc-nssf
+    spec:
+      containers:      
+      - name: free5gc-nssf
+        image: free5gc:2.0
+        securityContext:
+          privileged: true        
+        command: ["/bin/sh"]
+        args: ["-c", "/free5gc/bin/nssf"]
+        volumeMounts:
+        - name: nssfcfg
+          mountPath: /free5gc/config/nssfcfg.yaml
+          subPath: nssfcfg.yaml
+        ports:
+        - containerPort: 30004
+          name: f5gc-nssf
+          protocol: TCP
+      volumes:
+      - name: nssfcfg
+        configMap:
+          name: free5gc-configmap
+          items: 
+          - key: nssfcfg.yaml
+            path: nssfcfg.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-nssf-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 30004
+    nodePort: 30004
+  selector:
+    app: free5gc-nssf
+---            

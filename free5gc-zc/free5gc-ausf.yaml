@@ -1,0 +1,49 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: free5gc-ausf-deployment
+spec:
+  selector:
+    matchLabels:
+      app: free5gc-ausf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc-ausf
+    spec:
+      containers:      
+      - name: free5gc-ausf
+        image: free5gc:2.0
+        securityContext:
+          privileged: true
+        command: ["/bin/sh"]
+        args: ["-c", "/free5gc/bin/ausf"]
+        volumeMounts:
+        - name: ausfcfg
+          mountPath: /free5gc/config/ausfcfg.yaml
+          subPath: ausfcfg.yaml
+        ports:
+        - containerPort: 30005
+          name: f5gc-ausf
+          protocol: TCP
+      volumes:      
+      - name: ausfcfg
+        configMap:
+          name: free5gc-configmap
+          items: 
+          - key: ausfcfg.yaml
+            path: ausfcfg.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-ausf-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 30005
+    nodePort: 30005
+  selector:
+    app: free5gc-ausf
+---      

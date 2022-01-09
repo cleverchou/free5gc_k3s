@@ -1,0 +1,49 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: free5gc-udm-deployment
+spec:
+  selector:
+    matchLabels:
+      app: free5gc-udm
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc-udm
+    spec:
+      containers:      
+      - name: free5gc-udm
+        image: free5gc:2.0
+        securityContext:
+          privileged: true        
+        command: ["/bin/sh"]
+        args: ["-c", "/free5gc/bin/udm"]
+        volumeMounts:
+        - name: udmcfg
+          mountPath: /free5gc/config/udmcfg.yaml
+          subPath: udmcfg.yaml
+        ports:
+          - containerPort: 30008
+            name: f5gc-udm
+            protocol: TCP
+      volumes:
+      - name: udmcfg
+        configMap:
+          name: free5gc-configmap
+          items: 
+          - key: udmcfg.yaml
+            path: udmcfg.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-udm-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 30008
+    nodePort: 30008
+  selector:
+    app: free5gc-udm
+---          

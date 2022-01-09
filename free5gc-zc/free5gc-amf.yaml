@@ -1,0 +1,57 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: free5gc-amf-deployment
+spec:
+  selector:
+    matchLabels:
+      app: free5gc-amf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc-amf
+    spec:
+      containers:      
+      - name: free5gc-amf
+        image: free5gc:2.0
+        securityContext:
+          privileged: true
+        command: ["/bin/sh"]
+        args: ["-c", "/free5gc/bin/amf"]
+        volumeMounts:
+        - name: amfcfg
+          mountPath: /free5gc/config/amfcfg.yaml
+          subPath: amfcfg.yaml
+        ports:
+        - containerPort: 30002
+          name: f5gc-amf
+          protocol: TCP
+        - containerPort: 38412
+          name: n2-inf
+          protocol: SCTP
+      volumes:      
+      - name: amfcfg
+        configMap:
+          name: free5gc-configmap
+          items: 
+          - key: amfcfg.yaml
+            path: amfcfg.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-amf-svc
+spec:
+  type: NodePort
+  ports:
+  - name: f5gc-amf
+    port: 30002
+    nodePort: 30002
+  - name: n2-inf
+    port: 38412
+    nodePort: 32412
+    protocol: SCTP
+  selector:
+    app: free5gc-amf
+---      

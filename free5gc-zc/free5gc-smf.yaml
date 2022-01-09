@@ -1,0 +1,66 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: free5gc-smf-deployment
+spec:
+  selector:
+    matchLabels:
+      app: free5gc-smf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc-smf
+    spec:
+      containers:      
+      - name: free5gc-smf
+        image: free5gc:2.0
+        securityContext:
+          privileged: true
+        command: ["/bin/sh"]
+        args: ["-c", "/free5gc/bin/smf"]
+        volumeMounts:
+        - name: smfcfg
+          mountPath: /free5gc/config/smfcfg.yaml
+          subPath: smfcfg.yaml
+        - name: uerouting
+          mountPath: /free5gc/config/uerouting.yaml
+          subPath: uerouting.yaml
+        ports:
+        - containerPort: 30003
+          name: f5gc-smf
+          protocol: TCP
+        - containerPort: 8805
+          name: n4-inf
+          protocol: UDP
+      volumes:      
+      - name: smfcfg
+        configMap:
+          name: free5gc-configmap
+          items: 
+          - key: smfcfg.yaml
+            path: smfcfg.yaml
+      - name: uerouting
+        configMap:
+          name: free5gc-configmap
+          items: 
+          - key: uerouting.yaml
+            path: uerouting.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-smf-svc
+spec:
+  type: NodePort
+  ports:
+  - name: f5gc-smf
+    port: 30003
+    nodePort: 30003
+  - name: n4-inf
+    port: 8805
+    nodePort: 30805
+    protocol: UDP
+  selector:
+    app: free5gc-smf
+---      

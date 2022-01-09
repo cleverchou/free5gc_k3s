@@ -1,0 +1,49 @@
+apiVersion: apps/v1 
+kind: Deployment
+metadata:
+  name: free5gc-pcf-deployment
+spec:
+  selector:
+    matchLabels:
+      app: free5gc-pcf
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: free5gc-pcf
+    spec:
+      containers:      
+      - name: free5gc-pcf
+        image: free5gc:2.0
+        securityContext:
+          privileged: true
+        command: ["/bin/sh"]
+        args: ["-c", "/free5gc/bin/pcf"]
+        volumeMounts:
+        - name: pcfcfg
+          mountPath: /free5gc/config/pcfcfg.yaml
+          subPath: pcfcfg.yaml
+        ports:
+        - containerPort: 30006
+          name: f5gc-pcf
+          protocol: TCP
+      volumes:      
+      - name: pcfcfg
+        configMap:
+          name: free5gc-configmap
+          items: 
+          - key: pcfcfg.yaml
+            path: pcfcfg.yaml
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: free5gc-pcf-svc
+spec:
+  type: NodePort
+  ports:
+  - port: 30006
+    nodePort: 30006
+  selector:
+    app: free5gc-pcf
+---       

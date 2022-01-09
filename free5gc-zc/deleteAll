@@ -1,0 +1,12 @@
+kubectl delete -f  free5gc-amf.yaml
+kubectl delete -f  free5gc-mongodb.yaml
+kubectl delete -f  free5gc-ausf.yaml
+kubectl delete -f  free5gc-nssf.yaml
+kubectl delete -f  free5gc-pcf.yaml
+#kubectl delete -f  free5gc-smf.yaml
+kubectl delete -f  free5gc-smf2crd.yaml
+kubectl delete -f  free5gc-udm.yaml
+kubectl delete -f  free5gc-udr.yaml
+kubectl delete -f  free5gc-nrf.yaml
+
+kubectl get pod

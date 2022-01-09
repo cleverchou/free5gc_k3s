@@ -1,0 +1,64 @@
+kubectl apply -f  free5gc-configmap.yaml
+kubectl apply -f  free5gc-mongodb.yaml
+sleep 20  && kubectl get pod
+
+kubectl apply -f  free5gc-nrf.yaml
+sleep 10 && kubectl get pod
+read -p "nrf finished, enter any key to go：" n
+
+kubectl apply -f  free5gc-amf.yaml
+sleep 10 && kubectl get pod
+read -p "amf finished, enter any key to go：" n
+
+kubectl apply -f  free5gc-ausf.yaml
+sleep 10 && kubectl get pod
+read -p "ausf finished, enter any key to go：" n
+
+kubectl apply -f  free5gc-nssf.yaml
+sleep 10 && kubectl get pod
+read -p "nssf finished, enter any key to go：" n
+
+kubectl apply -f  free5gc-pcf.yaml
+sleep 10 && kubectl get pod
+read -p "pcf finished, enter any key to go：" n
+
+kubectl apply -f  free5gc-udr.yaml
+sleep 10 && kubectl get pod
+read -p "udr finished, enter any key to go：" n
+
+kubectl apply -f  free5gc-udm.yaml
+sleep 10 && kubectl get pod
+read -p "udm finished, enter any key to go：" n
+
+#ip link add veth0 type veth peer name veth1
+#ip link set veth0 up
+#ip addr add 192.168.3.101/24 dev veth0
+ovs-vsctl del-br br1
+ovs-vsctl add-br br1
+ ip addr add  192.168.3.254/23 dev br1
+ ip addr add 192.168.3.101/24 dev br1
+ ifconfig br1 up 
+
+echo "make sure : upf is Runing "
+read -p "yes? enter any key to go：" n
+#kubectl apply -f  free5gc-smf.yaml
+#pre: unix-daemonset.yaml   ovs-cni.yaml createCRD.yaml  ovs-net-crd.yaml
+kubectl apply -f 2crd/ovs-cni.yaml && \
+kubectl apply -f 2crd/createCRD.yaml && \
+kubectl apply -f 2crd/ovs-net-crd.yaml && \
+kubectl apply -f 2crd/unix-daemonset.yaml 
+kubectl apply -f  free5gc-smf2crd.yaml
+
+sleep 20
+#smfDockerID=$( docker ps | grep " k8s_free5gc-smf_free5gc-smf-deployment-*" | awk -F " " '{print $1}')
+#sfmID=$( docker inspect $smfDockerID -f'{{.State.Pid}}')
+#mkdir -p  /var/run/netns
+#ln -s /proc/$sfmID/ns/net  /var/run/netns/$sfmID
+#ip link set veth1 netns $sfmID
+#ip netns exec $sfmID ip link set veth1 up
+#ip netns exec $sfmID ip addr add 192.168.3.102/24 dev veth1
+
+ip a | grep "192.168.3.101"
+ping  192.168.3.102 -c 3
+
+kubectl get pod
